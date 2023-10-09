@@ -1,14 +1,17 @@
 package com.example.demo.user.controller;
 
+import com.example.demo.user.controller.port.*;
+import com.example.demo.user.controller.request.UserUpdateRequest;
 import com.example.demo.user.controller.response.MyProfileResponse;
 import com.example.demo.user.controller.response.UserResponse;
+import com.example.demo.user.domain.User;
 import com.example.demo.user.domain.UserUpdate;
-import com.example.demo.user.infrastructure.UserEntity;
-import com.example.demo.user.service.UserService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
+
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,16 +29,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Builder
 public class UserController {
 
     private final UserService userService;
+
+//    private final UserCreateService userCreateService;
+//    private final UserUpdateService userUpdateService;
+//    private final UserReadService userReadService;
+//    private final AuthenticationService authenticationService;
 
     @ResponseStatus
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable long id) {
         return ResponseEntity
             .ok()
-            .body(toResponse(userService.getByIdOrElseThrow(id)));
+            .body(UserResponse.from(userService.getByIdOrElseThrow(id)));
     }
 
     @GetMapping("/{id}/verify")
@@ -48,16 +57,19 @@ public class UserController {
             .build();
     }
 
+    // 아래처럼 반환타입이 다르다라는것은 책임이 제대로 분할되지않았다는것.
+    // 아래도 MyInfoController 로 분할해서 책임을 나눠줄수도있다.
     @GetMapping("/me")
     public ResponseEntity<MyProfileResponse> getMyInfo(
         @Parameter(name = "EMAIL", in = ParameterIn.HEADER)
         @RequestHeader("EMAIL") String email // 일반적으로 스프링 시큐리티를 사용한다면 UserPrincipal 에서 가져옵니다.
     ) {
-        UserEntity userEntity = userService.getByEmail(email);
-        userService.login(userEntity.getId());
+        User user = userService.getByEmail(email);
+        userService.login(user.getId());
+        user = userService.getByEmail(email);
         return ResponseEntity
             .ok()
-            .body(toMyProfileResponse(userEntity));
+            .body(MyProfileResponse.from(user));
     }
 
     @PutMapping("/me")
@@ -67,31 +79,12 @@ public class UserController {
         @RequestHeader("EMAIL") String email, // 일반적으로 스프링 시큐리티를 사용한다면 UserPrincipal 에서 가져옵니다.
         @RequestBody UserUpdate userUpdate
     ) {
-        UserEntity userEntity = userService.getByEmail(email);
-        userEntity = userService.updateUser(userEntity.getId(), userUpdate);
+        User user = userService.getByEmail(email);
+        user = userService.update(user.getId(),userUpdate);
+//        user = userService.update(user.getId(), userUpdateRequest.toUserUpdate()); // 원래 이렇게 해줘야한다.
         return ResponseEntity
             .ok()
-            .body(toMyProfileResponse(userEntity));
+            .body(MyProfileResponse.from(user));
     }
 
-    public UserResponse toResponse(UserEntity userEntity) {
-        UserResponse userResponse = new UserResponse();
-        userResponse.setId(userEntity.getId());
-        userResponse.setEmail(userEntity.getEmail());
-        userResponse.setNickname(userEntity.getNickname());
-        userResponse.setStatus(userEntity.getStatus());
-        userResponse.setLastLoginAt(userEntity.getLastLoginAt());
-        return userResponse;
-    }
-
-    public MyProfileResponse toMyProfileResponse(UserEntity userEntity) {
-        MyProfileResponse myProfileResponse = new MyProfileResponse();
-        myProfileResponse.setId(userEntity.getId());
-        myProfileResponse.setEmail(userEntity.getEmail());
-        myProfileResponse.setNickname(userEntity.getNickname());
-        myProfileResponse.setStatus(userEntity.getStatus());
-        myProfileResponse.setAddress(userEntity.getAddress());
-        myProfileResponse.setLastLoginAt(userEntity.getLastLoginAt());
-        return myProfileResponse;
-    }
 }
