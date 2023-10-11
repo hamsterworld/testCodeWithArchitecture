@@ -41,6 +41,7 @@ public class User {
 
     // 이런거 보면 도메인객체에 이렇게 전달받아서 넣어줘도 되는구나.
     public static User from(UserCreate userCreate, UuidHolder uuidHolder){
+//    public static User from(UserCreate userCreate, String uuid){ // 개인적으로 이게 더 맞지않나 생각이 든다.
         return User.builder()
                 .email(userCreate.getEmail())
                 .nickname(userCreate.getNickname())
@@ -75,7 +76,7 @@ public class User {
     }
 
     public User certificate(String certificationCode){
-        if (!certificationCode.equals(certificationCode)) {
+        if (!this.certificationCode.equals(certificationCode)) {
             throw new CertificationCodeNotMatchedException();
         }
         return User.builder()
