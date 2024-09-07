@@ -3,6 +3,7 @@ package com.example.demo.post.service;
 import com.example.demo.mock.*;
 import com.example.demo.post.controller.port.PostService;
 import com.example.demo.post.domain.Post;
+import com.example.demo.post.domain.PostCreate;
 import com.example.demo.user.domain.User;
 import com.example.demo.user.domain.UserStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,6 +66,10 @@ class PostServiceTest {
                 .writer(user2)
                 .content("hello world2")
                 .build());
+
+        Post post = postService.create(PostCreate.builder().build());
+
+
     }
 
 
