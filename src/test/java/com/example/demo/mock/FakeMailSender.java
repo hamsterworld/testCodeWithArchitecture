@@ -7,12 +7,12 @@ public class FakeMailSender implements MailSender {
     public String email;
 
     public String title;
-    public String conetent;
+    public String content;
 
     @Override
     public void send(String email, String title, String content) {
         this.email = email;
         this.title = title;
-        this.conetent = content;
+        this.content = content;
     }
 }
